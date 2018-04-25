@@ -13,12 +13,12 @@ public class ValkyrieParserTask extends TimerTask {
 	private final Logger logger =  LoggerFactory.getLogger(ValkyrieParserTask.class);
 	@Override
 	public void run() {
-		System.out.println("ValkyrieParserTask start");
+		logger.info("ValkyrieParserTask start");
 		runRScript();
 	}
 
 	private void runRScript() {
-		System.out.println("ValkyrieParserTask runRScript start");
+		logger.info("ValkyrieParserTask runRScript start");
 		Process proc = null;
 		ProcessBuilder pb = null;
 		
@@ -30,8 +30,7 @@ public class ValkyrieParserTask extends TimerTask {
 			File rscript_file = new File(rscript);
 			if (rscript_file.exists()) {
 				Date date = new Date();
-				logger.debug("PID=RTS Status=Start Result=  Time=" + date + " Cmd=" +rscript);
-				System.out.println("PID=RTS Status=Start Result=  Time=" + date + " Cmd=" +rscript);
+				logger.info("PID=RTS Status=Start Result=  Time=" + date + " Cmd=" +rscript);
 				
 				pb = new ProcessBuilder("/usr/bin/Rscript", rscript);
 				File logFile = new File("logs/ValkyrieParserTask.log");
@@ -41,19 +40,15 @@ public class ValkyrieParserTask extends TimerTask {
 				
 				int exitValue = proc.waitFor();
 				if (exitValue == 0) {
-					System.out.println("PID=RTS Status=End Result=Success ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
 					logger.debug("PID=RTS Status=End Result=Success ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
 				}
 				else {
-					System.out.println("PID=RTS Status=End Result=Fail ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
 					logger.debug("PID=RTS Status=End Result=Fail ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
 				}
 			}
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
 			logger.error(e.getMessage(), e);
 		} catch (InterruptedException e) {
-			System.out.println(e.getMessage());
 			logger.error(e.getMessage(), e);
 		} finally {
 			if (proc != null) {

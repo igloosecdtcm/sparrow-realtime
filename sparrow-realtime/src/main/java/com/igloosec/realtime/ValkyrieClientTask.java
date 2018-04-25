@@ -2,11 +2,15 @@ package com.igloosec.realtime;
 
 import java.util.TimerTask;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ValkyrieClientTask extends TimerTask{
+	private final Logger logger =  LoggerFactory.getLogger(ValkyrieClientTask.class);
 
 	@Override
 	public void run() {
-		System.out.println("ValkyrieClientTask start");
+		logger.info("ValkyrieClientTask start");
 	}
 
 }

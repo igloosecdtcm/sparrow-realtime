@@ -37,8 +37,8 @@ public class RealtimeStatsServiceImpl implements RealtimeStatsService{
 	@Validate
 	private void start() {
 		logger.info("RealtimeStatsService start");
-		System.out.println("RealtimeStatsService start");
-		
+		//logger.info("prop - ", prop.getProperties());
+
 		// db에서 query 정보 가져온다.
 		//timer = new Timer("AggregationTask");
 		
