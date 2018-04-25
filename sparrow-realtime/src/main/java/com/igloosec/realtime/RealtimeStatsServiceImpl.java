@@ -37,22 +37,22 @@ public class RealtimeStatsServiceImpl implements RealtimeStatsService{
 	@Validate
 	private void start() {
 		logger.info("RealtimeStatsService start");
-		//System.out.println("RealtimeStatsService start");
+		System.out.println("RealtimeStatsService start");
 		
 		// db에서 query 정보 가져온다.
 		//timer = new Timer("AggregationTask");
 		
 		// 해당 쿼리 발키리 쿼리로 파싱
 		timer = new Timer("ValkyrieParserTask");
-		timer.scheduleAtFixedRate(new ValkyrieParserTask(), 1000, 1000);
+		timer.scheduleAtFixedRate(new ValkyrieParserTask(), 1000, 10000);
 		
 		// 해당 query로 발키리에 집계
 		timer = new Timer("AggregationTask");
-		timer.scheduleAtFixedRate(new AggregationTask(), 1000, 1000);
+		timer.scheduleAtFixedRate(new AggregationTask(), 1000, 10000);
 
 		// 집계 결과 데이터 발키리에 저장
 		timer = new Timer("ValkyrieClientTask");
-		timer.scheduleAtFixedRate(new ValkyrieClientTask(), 1000, 1000);
+		timer.scheduleAtFixedRate(new ValkyrieClientTask(), 1000, 10000);
 	}
 	@Invalidate
 	private void stop() {
