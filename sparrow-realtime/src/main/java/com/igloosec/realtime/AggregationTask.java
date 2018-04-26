@@ -1,16 +1,166 @@
 package com.igloosec.realtime;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.TimerTask;
 
+import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.igloosec.realtime.vo.JobInfo;
 
 public class AggregationTask extends TimerTask{
-	private final Logger logger =  LoggerFactory.getLogger(ValkyrieClientTask.class);
-
+	private final Logger logger =  LoggerFactory.getLogger(AggregationTask.class);
+	private List<JobInfo> jobs = new ArrayList<>();
+	private RealtimeStatsService rss;
+	
+	public AggregationTask(RealtimeStatsServiceImpl rss) {
+		logger.info("AggregationTask ist");
+		this.rss = rss;
+	}
 	@Override
 	public void run() { 
-		logger.info("AggregationTask start");
+		logger.info("AggregationTask run start");
+		getJobs();
+	}
+	private void resetJobs(){
+		this.jobs = new ArrayList<>();
+	}
+	private void removeJobs() {
+		File fileName = null;
+		fileName = new File("./R/jobs.r");
+		fileName.delete();
+	}
+	private void printJobs(){
+		StringBuffer sb = new StringBuffer();
+		
+		if (!this.jobs.isEmpty()){
+			sb.append("all_query <- list()\n");
+			
+			for (JobInfo job : this.jobs) {
+				//jobs 데이터를 r스크립트에 바인딩해야 함
+				//sb.append("all_query <- (all_query,1)\n");
+			}
+		}
+		
+		File fileName = null;
+		FileWriterWithEncoding fw = null;
+		BufferedWriter bw = null;
+		PrintWriter pw = null;
+		try {
+			fileName = new File("./R/jobs.r");
+			if (fileName.getParentFile().exists()) {
+				fw = new FileWriterWithEncoding(fileName, "UTF-8", false);
+				bw = new BufferedWriter(fw);
+				pw = new PrintWriter(bw);
+				
+				pw.println(sb.toString());
+			}
+		} catch(IOException ioe) {
+			logger.error(ioe.getMessage(), ioe);
+		} catch(Exception e) {
+			logger.error(e.getMessage(), e);
+		} finally{
+			if (pw != null) {
+				pw.close();
+			}
+			if (bw != null) {
+				try {
+					bw.close();
+				} catch (IOException e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+			if (fw != null) {
+				try {
+					fw.close();
+				} catch (IOException e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+			if (this.jobs != null) {
+				resetJobs();
+				runAggregation();
+			}
+		}
+	}
+	private void getJobs(){
+		//db에서 job 정보 가져온다.
+		/*if(jobs.isEmpty()) {
+			List<Map<String, Object>> jobs = rss.getDBHandler().getNColumnList("logger", "select id, query, aggs, size, sort, type, status from ? where type = 'y'");
+			logger.info("job size - ",jobs);
+			for (Map<String, Object> job :jobs){
+				String id = job.get("id").toString();
+				String query = job.get("query").toString();
+				String aggs = job.get("aggs").toString();
+				int size = Integer.parseInt(job.get("size").toString());
+				String sort = job.get("sort").toString();
+				String type = job.get("type").toString();
+				this.jobs.add(new JobInfo(id, query, aggs, size, sort, type));
+			}
+		}*/
+		
+		// category == 'E007' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'
+		// s_info,d_info,d_port,protocol
+		String id = "";
+		String query = "category == 'E007'";
+		String aggs = "s_info,d_info,d_port,protocol";
+		int size = 0;
+		String sort = "";
+		String type = "";
+		this.jobs.add(new JobInfo(id, query, aggs, size, sort, type));
+		logger.info("job size - " + this.jobs.size());
+		printJobs();
+	}
+	
+	private void runAggregation() {
+		logger.info("AggregationTask runRScript start");
+		Process proc = null;
+		ProcessBuilder pb = null;
+		
+		try {
+			
+			long startTime = new Date().getTime();
+			
+			String rscript = "./R/parser.r";
+			File rscript_file = new File(rscript);
+			if (rscript_file.exists()) {
+				Date date = new Date();
+				logger.info("PID=RTS Status=Start Result=  Time=" + date + " Cmd=" +rscript);
+				
+				pb = new ProcessBuilder("/usr/bin/Rscript", rscript);
+				File logFile = new File("logs/AggregationTask.log");
+				pb.redirectErrorStream(true);
+				pb.redirectOutput(Redirect.appendTo(logFile));
+				proc = pb.start();
+				
+				int exitValue = proc.waitFor();
+				if (exitValue == 0) {
+					logger.debug("PID=RTS Status=End Result=Success ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
+				}
+				else {
+					logger.debug("PID=RTS Status=End Result=Fail ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
+				}
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		} catch (InterruptedException e) {
+			logger.error(e.getMessage(), e);
+		} finally {
+			if (proc != null) {
+				proc.destroy();	
+			}
+			if (pb != null) {
+				pb = null;
+			}
+			removeJobs();
+		}
 	}
 
 }
