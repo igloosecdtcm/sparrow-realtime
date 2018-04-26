@@ -1,0 +1,13 @@
+#valkyrie info
+valkyrie_ip : localhost
+valkyrie_port : 9200
+valkyrie_index : sniper
+valkyrie_index_type : _doc
+
+aggregation_ip : localhost
+aggregation_port : 9200
+aggregation_index : aggregation 
+aggregation_index_doc : _doc
+
+#db info
+

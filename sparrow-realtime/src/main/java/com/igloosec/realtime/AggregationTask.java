@@ -15,8 +15,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.igloosec.realtime.vo.JobInfo;
 
+/*************************************************** 
+ * <pre> 
+* 업무 그룹명: Fury
+* 서브 업무명: 1분단위로 파싱, 집계, 저장하는 메소드
+* 설       명: db에서 job을 불러, r 파일로 job을 등록, r 스크립트가 실행되면서 job 정보를 파싱, 집계, 저장한다.
+* 작   성  자: 이선구 [devleesk@igloosec.com]
+* 작   성  일: 2018. 4. 27.
+* Copyright ⓒIGLOO SEC. All Right Reserved
+ * </pre> 
+ ***************************************************/ 
 public class AggregationTask extends TimerTask{
 	private final Logger logger =  LoggerFactory.getLogger(AggregationTask.class);
+	
+	/** job 정보 */
 	private List<JobInfo> jobs = new ArrayList<>();
 	private RealtimeStatsService rss;
 	
@@ -24,19 +36,42 @@ public class AggregationTask extends TimerTask{
 		logger.info("AggregationTask ist");
 		this.rss = rss;
 	}
+	/***************************************************** 
+	 * TimerTask 스케쥴러가 실행되면, run 메소드를 실행
+	 * @see java.util.TimerTask#run()
+	******************************************************/ 
 	@Override
 	public void run() { 
 		logger.info("AggregationTask run start");
 		getJobs();
 	}
+	/***************************************************** 
+	 * jobs 리스트 초기화
+	 * @param 
+	 * @return void
+	 * @exception    
+	******************************************************/ 
 	private void resetJobs(){
 		this.jobs = new ArrayList<>();
 	}
+	
+	/***************************************************** 
+	 * jobs.r 스크립트 파일 삭제
+	 * @param 
+	 * @return void
+	 * @exception    
+	******************************************************/ 
 	private void removeJobs() {
 		File fileName = null;
 		fileName = new File("./R/jobs.r");
 		fileName.delete();
 	}
+	/***************************************************** 
+	 * jobs에 있는 job 정보를 r스크립트로 만들고, jobs.r로 파일 생성
+	 * @param 
+	 * @return void
+	 * @exception    
+	******************************************************/ 
 	private void printJobs(){
 		StringBuffer sb = new StringBuffer();
 		
@@ -90,6 +125,13 @@ public class AggregationTask extends TimerTask{
 			}
 		}
 	}
+	/***************************************************** 
+	 * db에서 job 정보를 가져와 jobs에 추가한다.
+	 * 지금은 db연동이 안되있음.
+	 * @param 
+	 * @return void
+	 * @exception    
+	******************************************************/ 
 	private void getJobs(){
 		//db에서 job 정보 가져온다.
 		/*if(jobs.isEmpty()) {
@@ -119,6 +161,13 @@ public class AggregationTask extends TimerTask{
 		printJobs();
 	}
 	
+	/***************************************************** 
+	 * parser.r 스크립트 실행한다.
+	 * printJobs 메소드에서 만들어진 jobs.r 파일을 읽고, 다음 명령 실행
+	 * @param 
+	 * @return void
+	 * @exception    
+	******************************************************/ 
 	private void runAggregation() {
 		logger.info("AggregationTask runRScript start");
 		Process proc = null;
@@ -142,10 +191,12 @@ public class AggregationTask extends TimerTask{
 				
 				int exitValue = proc.waitFor();
 				if (exitValue == 0) {
-					logger.debug("PID=RTS Status=End Result=Success ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
+					logger.debug("PID=RTS Status=End Result=Success ExecuteTime=" + 
+							(new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
 				}
 				else {
-					logger.debug("PID=RTS Status=End Result=Fail ExecuteTime=" + (new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
+					logger.debug("PID=RTS Status=End Result=Fail ExecuteTime=" + 
+							(new Date().getTime()-startTime)/1000.0f + " ExitValue="+exitValue);
 				}
 			}
 		} catch (IOException e) {

@@ -1,5 +1,15 @@
 package com.igloosec.realtime.vo;
 
+/*************************************************** 
+ * <pre> 
+* 업무 그룹명: Fury
+* 서브 업무명: job 정보 
+* 설       명: job 정보
+* 작   성  자: 이선구 [devleesk@igloosec.com]
+* 작   성  일: 2018. 4. 27.
+* Copyright ⓒIGLOO SEC. All Right Reserved
+ * </pre> 
+ ***************************************************/ 
 public class JobInfo {
 	private String id;
 	private String query;

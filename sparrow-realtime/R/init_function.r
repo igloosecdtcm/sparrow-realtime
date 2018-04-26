@@ -54,12 +54,54 @@ generate_last_aggs <- function(str){
   return(result_json)
 }
 
+
 old_query_parser <- function(str){
   str <- preprocessing(str)
   types <- split_query(str)
   distributed_result <- distributed_must(types)
   return(generate_query(distributed_result))
 }
+
+split_query <- function(str){
+  str_arr <- strsplit(str, fixed=TRUE, split= " & ")[[1]]
+  types <- list()
+  for (idx in 1 : length(str_arr)){
+    types[[length(types) + 1]] <- split_type(str_arr[idx])
+  }
+  return(types)
+}
+
+split_type <- function(str){
+  str_arr <- strsplit(str, fixed=TRUE, split= " ")[[1]]
+  return(list(
+    field_name = str_arr[1],
+    operator = str_arr[2],
+    value = str_arr[3]
+  ))
+}
+
+distributed_must <- function(str){
+  must <- list()
+  must_not <- list()
+  for(idx in 1:length(str)){
+    if (substr(str[[idx]]$field_name,1,1) == "!") {
+      #must_not[[length(must_not) + 1]] <- s[[idx]]
+      must_not[[length(must_not) + 1]] <- 
+        list(
+          field_name = substr(str[[idx]]$field_name,2,nchar(str[[idx]]$field_name)),
+          operator = str[[idx]]$operator,
+          value = str[[idx]]$value
+        )
+    } else {
+      must[[length(must) + 1]] <- str[[idx]]
+    }
+  }
+  return(list(
+    must = must,
+    must_not = must_not
+  ))
+}
+
 # generate_query
 generate_query <- function(distributed_result){
   #return(query(paste0('{', generate_bool_query(distributed_result), '}')))
@@ -111,45 +153,7 @@ generate_must_sub_query <- function(str){
     return ()
   }
 }
-distributed_must <- function(str){
-  must <- list()
-  must_not <- list()
-  for(idx in 1:length(str)){
-    if (substr(str[[idx]]$field_name,1,1) == "!") {
-      #must_not[[length(must_not) + 1]] <- s[[idx]]
-      must_not[[length(must_not) + 1]] <- 
-        list(
-          field_name = substr(str[[idx]]$field_name,2,nchar(str[[idx]]$field_name)),
-          operator = str[[idx]]$operator,
-          value = str[[idx]]$value
-          )
-    } else {
-      must[[length(must) + 1]] <- str[[idx]]
-    }
-  }
-  return(list(
-    must = must,
-    must_not = must_not
-  ))
-}
 
-split_query <- function(str){
-  str_arr <- strsplit(str, fixed=TRUE, split= " & ")[[1]]
-  types <- list()
-  for (idx in 1 : length(str_arr)){
-    types[[length(types) + 1]] <- split_type(str_arr[idx])
-  }
-  return(types)
-}
-
-split_type <- function(str){
-  str_arr <- strsplit(str, fixed=TRUE, split= " ")[[1]]
-  return(list(
-    field_name = str_arr[1],
-    operator = str_arr[2],
-    value = str_arr[3]
-  ))
-}
 
 get_field_set <- function(aggs){
   field_set <- list()
