@@ -1,2 +1,0 @@
-all_query <- list()
-
