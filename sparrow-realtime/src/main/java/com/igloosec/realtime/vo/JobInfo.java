@@ -11,57 +11,92 @@ package com.igloosec.realtime.vo;
  * </pre> 
  ***************************************************/ 
 public class JobInfo {
-	private String id;
-	private String query;
-	private String aggs;
-	private int size;
-	private String sort;
-	private String type;
+	// job ID - PK
+	private int id;
+	// job 명칭
+	private String title;
+	// 동작 주기(분) - 1분 ~ n분
+	private int schedule;
+	// 조건 정의 - Match Query DSL
+	private String match;
+	// 함수 정의 - Aggregation Function
+	private String function;
+	// 그룹핑 필드 - Aggregation Query DSL
+	private String groupBy;
+	// 그룹핑 결과 조건 - Aggregation Query DSL
+	private String having;
+	// 제한 건수 - Aggregation Size
+	private int limit;
+	// 통계 구분 - S(stats) | P(profile)
+	private char type;
+	
 	public JobInfo() {
 	}
-	public String getQuery() {
-		return query;
-	}
-	public void setQuery(String query) {
-		this.query = query;
-	}
-	public String getAggs() {
-		return aggs;
-	}
-	public void setAggs(String aggs) {
-		this.aggs = aggs;
-	}
-	public String getId() {
+	public int getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(int id) {
 		this.id = id;
 	}
-	public int getSize() {
-		return size;
+	public String getTitle() {
+		return title;
 	}
-	public void setSize(int size) {
-		this.size = size;
+	public void setTitle(String title) {
+		this.title = title;
 	}
-	public String getType() {
+	public int getSchedule() {
+		return schedule;
+	}
+	public void setSchedule(int schedule) {
+		this.schedule = schedule;
+	}
+	public String getMatch() {
+		return match;
+	}
+	public void setMatch(String match) {
+		this.match = match;
+	}
+	public String getFunction() {
+		return function;
+	}
+	public void setFunction(String function) {
+		this.function = function;
+	}
+	public String getGroupBy() {
+		return groupBy;
+	}
+	public void setGroupBy(String groupBy) {
+		this.groupBy = groupBy;
+	}
+	public String getHaving() {
+		return having;
+	}
+	public void setHaving(String having) {
+		this.having = having;
+	}
+	public int getLimit() {
+		return limit;
+	}
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
+	public char getType() {
 		return type;
 	}
-	public void setType(String type) {
+	public void setType(char type) {
 		this.type = type;
 	}
-	public String getSort() {
-		return sort;
-	}
-	public void setSort(String sort) {
-		this.sort = sort;
-	}
-	public JobInfo(String id, String query, String aggs, int size, String sort, String type) {
+	public JobInfo(int id, String title, int schedule, String match, String function, String groupBy, String having,
+			int limit, char type) {
 		super();
 		this.id = id;
-		this.query = query;
-		this.aggs = aggs;
-		this.size = size;
-		this.sort = sort;
+		this.title = title;
+		this.schedule = schedule;
+		this.match = match;
+		this.function = function;
+		this.groupBy = groupBy;
+		this.having = having;
+		this.limit = limit;
 		this.type = type;
 	}
 }

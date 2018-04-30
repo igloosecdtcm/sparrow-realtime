@@ -1,0 +1,50 @@
+---
+- id: 1
+  title: "커스텀 job1"
+  schedule: 1
+  match: "category == 'E002' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'\
+    \ & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & !method %in% c(\"null\"\
+    ,\"-\")"
+  function: "?"
+  groupBy: "s_info.keyword"
+  having: "?"
+  limit: 10
+  type: "S"
+- id: 2
+  title: "커스텀 job2"
+  schedule: 5
+  match: "category == 'E007' & !method %in% c(\"null\",\"-\")"
+  function: "?"
+  groupBy: "risk"
+  having: "?"
+  limit: 10
+  type: "S"
+- id: 3
+  title: "커스텀 job3"
+  schedule: 10
+  match: "category == 'E007' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'\
+    \ & !method %in% c(\"null\",\"-\")"
+  function: "?"
+  groupBy: "method.keyword,risk"
+  having: "?"
+  limit: 10
+  type: "S"
+- id: 4
+  title: "커스텀 job4"
+  schedule: 30
+  match: "category == 'E007' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'"
+  function: "?"
+  groupBy: "s_info.keyword,d_info.keyword"
+  having: "?"
+  limit: 10
+  type: "S"
+- id: 5
+  title: "커스텀 job5"
+  schedule: 60
+  match: "category == 'E007' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'\
+    \ & !method %in% c(\"null\",\"-\")"
+  function: "?"
+  groupBy: "s_info.keyword,d_info.keyword,method.keyword,risk"
+  having: "?"
+  limit: 10
+  type: "S"

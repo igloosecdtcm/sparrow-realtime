@@ -1,18 +1,20 @@
 package com.igloosec.realtime;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
-
-import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.igloosec.realtime.vo.JobInfo;
 
 /*************************************************** 
@@ -30,6 +32,7 @@ public class AggregationTask extends TimerTask{
 	
 	/** job 정보 */
 	private List<JobInfo> jobs = new ArrayList<>();
+	
 	private RealtimeStatsService rss;
 	
 	public AggregationTask(RealtimeStatsServiceImpl rss) {
@@ -63,65 +66,33 @@ public class AggregationTask extends TimerTask{
 	******************************************************/ 
 	private void removeJobs() {
 		File fileName = null;
-		fileName = new File("./R/jobs.r");
+		fileName = new File("./R/jobs.yaml");
 		fileName.delete();
 	}
 	/***************************************************** 
-	 * jobs에 있는 job 정보를 r스크립트로 만들고, jobs.r로 파일 생성
+	 * jobs에 있는 job 정보를 jobs.yaml 파일 생성
 	 * @param 
 	 * @return void
 	 * @exception    
 	******************************************************/ 
 	private void printJobs(){
-		StringBuffer sb = new StringBuffer();
 		
 		if (!this.jobs.isEmpty()){
-			sb.append("all_query <- list()\n");
-			
-			for (JobInfo job : this.jobs) {
-				//jobs 데이터를 r스크립트에 바인딩해야 함
-				//sb.append("all_query <- (all_query,1)\n");
-			}
-		}
-		
-		File fileName = null;
-		FileWriterWithEncoding fw = null;
-		BufferedWriter bw = null;
-		PrintWriter pw = null;
-		try {
-			fileName = new File("./R/jobs.r");
-			if (fileName.getParentFile().exists()) {
-				fw = new FileWriterWithEncoding(fileName, "UTF-8", false);
-				bw = new BufferedWriter(fw);
-				pw = new PrintWriter(bw);
-				
-				pw.println(sb.toString());
-			}
-		} catch(IOException ioe) {
-			logger.error(ioe.getMessage(), ioe);
-		} catch(Exception e) {
-			logger.error(e.getMessage(), e);
-		} finally{
-			if (pw != null) {
-				pw.close();
-			}
-			if (bw != null) {
-				try {
-					bw.close();
-				} catch (IOException e) {
-					logger.error(e.getMessage(), e);
+			ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+			Map<String, Object> m = new HashMap<>();
+			try {
+				mapper.writeValue(new File("./R/jobs.yaml"), this.jobs);
+			} catch (JsonGenerationException e1) {
+				logger.error(e1.getMessage(), e1);
+			} catch (JsonMappingException e1) {
+				logger.error(e1.getMessage(), e1);
+			} catch (IOException e1) {
+				logger.error(e1.getMessage(), e1);
+			} finally {
+				if (this.jobs != null) {
+					resetJobs();
+					runAggregation();
 				}
-			}
-			if (fw != null) {
-				try {
-					fw.close();
-				} catch (IOException e) {
-					logger.error(e.getMessage(), e);
-				}
-			}
-			if (this.jobs != null) {
-				resetJobs();
-				runAggregation();
 			}
 		}
 	}
@@ -135,35 +106,48 @@ public class AggregationTask extends TimerTask{
 	private void getJobs(){
 		//db에서 job 정보 가져온다.
 		/*if(jobs.isEmpty()) {
-			List<Map<String, Object>> jobs = rss.getDBHandler().getNColumnList("logger", "select id, query, aggs, size, sort, type, status from ? where type = 'y'");
+			List<Map<String, Object>> jobs = rss.getDBHandler().getNColumnList("logger", "select id, title, schedule, match, function, groupBy, having, limit, type from ? where type = 'y'");
 			logger.info("job size - ",jobs);
 			for (Map<String, Object> job :jobs){
-				String id = job.get("id").toString();
-				String query = job.get("query").toString();
-				String aggs = job.get("aggs").toString();
-				int size = Integer.parseInt(job.get("size").toString());
-				String sort = job.get("sort").toString();
-				String type = job.get("type").toString();
-				this.jobs.add(new JobInfo(id, query, aggs, size, sort, type));
+				int id = Integer.parseInt(job.get("id").toString());
+				String title = job.get("title").toString();
+				int schedule = Integer.parseInt(job.get("schedule").toString());
+				String match = job.get("match").toString();
+				String function = job.get("function").toString();
+				String groupBy = job.get("groupBy").toString();
+				String having = job.get("having").toString();
+				int limit = Integer.parseInt(job.get("limit").toString());
+				char type = (char) job.get("type");
+				this.jobs.add(new JobInfo(id, title, schedule, match, function, groupBy, having, limit, type));
 			}
 		}*/
 		
+		/* db 연동 전, 로컬 테스트 */
 		// category == 'E007' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'
 		// s_info,d_info,d_port,protocol
-		String id = "";
-		String query = "category == 'E007'";
-		String aggs = "s_info,d_info,d_port,protocol";
-		int size = 0;
-		String sort = "";
-		String type = "";
-		this.jobs.add(new JobInfo(id, query, aggs, size, sort, type));
+		this.jobs.add(new JobInfo(1, "커스텀 job1", 1, 
+				"category == 'E002' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' "
+				+ "& d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & !method %in% c(\"null\",\"-\")",
+				"?", "s_info.keyword", "?", 10, 'S'));
+		this.jobs.add(new JobInfo(2, "커스텀 job2", 5, 
+				"category == 'E007' & !method %in% c(\"null\",\"-\")", "?", "risk", "?", 10, 'S'));
+		this.jobs.add(new JobInfo(3, "커스텀 job3", 10, 
+				"category == 'E007' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & !method %in% c(\"null\",\"-\")",
+				"?", "method.keyword,risk", "?", 10, 'S'));
+		this.jobs.add(new JobInfo(4, "커스텀 job4", 30, 
+				"category == 'E007' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$'", 
+				"?", "s_info.keyword,d_info.keyword", "?", 10, 'S'));
+		this.jobs.add(new JobInfo(5, "커스텀 job5", 60, 
+				"category == 'E007' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & !method %in% c(\"null\",\"-\")",
+				"?", "s_info.keyword,d_info.keyword,method.keyword,risk", "?", 10, 'S'));
+		
 		logger.info("job size - " + this.jobs.size());
 		printJobs();
 	}
 	
 	/***************************************************** 
 	 * parser.r 스크립트 실행한다.
-	 * printJobs 메소드에서 만들어진 jobs.r 파일을 읽고, 다음 명령 실행
+	 * printJobs 메소드에서 만들어진 jobs.yaml 파일을 읽고, 다음 명령 실행
 	 * @param 
 	 * @return void
 	 * @exception    
@@ -210,8 +194,7 @@ public class AggregationTask extends TimerTask{
 			if (pb != null) {
 				pb = null;
 			}
-			removeJobs();
+			//removeJobs();
 		}
 	}
-
 }

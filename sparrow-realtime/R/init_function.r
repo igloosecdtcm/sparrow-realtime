@@ -184,7 +184,11 @@ reqursive_find_aggregation_info <- function(d, field_idx, field_set, aggregation
     for (key_idx in 1 : length(d$key)) {
       aggregation_body[[paste0(field_set$field_name[[field_idx]], "_name")]] <- d$key[[key_idx]]
       aggregation_body[[paste0(field_set$field_name[[field_idx]], "_count")]] <- d$doc_count[[key_idx]]
-      reqursive_find_aggregation_info(d[[paste0(field_set$aggs_name[[field_idx+1]], ".buckets")]][[key_idx]], field_idx+1, field_set, aggregation_body, rule_id, idx)
+      if (length(field_set$field_name) == 1) {
+        docs_create(index='aggregations3', type='_doc', id=rule_id, body=aggregation_body)
+      } else {
+        reqursive_find_aggregation_info(d[[paste0(field_set$aggs_name[[field_idx+1]], ".buckets")]][[key_idx]], field_idx+1, field_set, aggregation_body, rule_id, idx)
+      }
     }
   } else {
     if (field_idx < length(field_set$field_name)) {
@@ -197,7 +201,7 @@ reqursive_find_aggregation_info <- function(d, field_idx, field_set, aggregation
       for (key_idx in 1 : length(d$key)) {
         aggregation_body[[paste0(field_set$field_name[[field_idx]], "_name")]] <- d$key[[key_idx]]
         aggregation_body[[paste0(field_set$field_name[[field_idx]], "_count")]] <- d$doc_count[[key_idx]]
-        docs_create(index='aggregations3', type='_doc', id=rule_id, body=aggregation_body)
+        docs_create(index='aggregations4', type='_doc', id=rule_id, body=aggregation_body)
       }
     }
   }

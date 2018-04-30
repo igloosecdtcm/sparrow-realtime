@@ -1,14 +1,16 @@
 print("parser r script start")
 source("./R/init.r")
 source("./R/init_function.r")
-source("./R/jobs.r")
-# 210
-# category == 'E002' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & !method %in% c('null','-')
-# s_info,d_info,method,risk
-connect()
-new_query <- old_query_parser("category == 'E002' & s_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & d_info %like% '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' & !method %in% c('null','-')")
-new_aggs <- old_aggs_parser("s_info.keyword,d_info.keyword,method.keyword,risk")
-field_set <- get_field_set(new_aggs)
-query_aggs <- query(new_query) + aggs(new_aggs)
-result <- elastic("http://localhost:9200", "sniper", "_doc") %search% query_aggs
-aggregation_insert(as.numeric(Sys.time()), field_set, result)
+
+jobs <- yaml.load_file("./R/jobs.yaml")
+connect(es_host = "127.0.0.1", es_port = 9200)
+for (idx in 1:length(jobs)){
+  new_query <- old_query_parser(jobs[[idx]]$match)
+  new_aggs <- old_aggs_parser(jobs[[idx]]$groupBy)
+  field_set <- get_field_set(new_aggs)
+  #print(new_query)
+  query_aggs <- query(new_query) + aggs(new_aggs)
+  result <- elastic("http://127.0.0.1:9200", "sniper", "_doc") %search% query_aggs
+  aggregation_insert(as.numeric(Sys.time()), field_set, result)
+  print(paste0(jobs[[idx]]$title, " - success"))
+}
